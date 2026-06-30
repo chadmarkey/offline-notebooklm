@@ -1,0 +1,39 @@
+# ── Secrets & local config ────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Pipeline data: corpus in/out — never commit (may contain PHI) ──
+raw_pdfs/
+clean_sources/
+notebook_data/
+surreal_data/
+
+# ── Model & embedding caches (multi-GB; re-downloaded on first run) ──
+infinity_cache/
+*.safetensors
+*.gguf
+*.onnx
+
+# ── Python ────────────────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ── Logs & local tooling ──────────────────────────────────
+*.log
+.remember/
+
+# ── macOS / editors ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

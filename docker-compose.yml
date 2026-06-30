@@ -1,0 +1,57 @@
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v2
+    command: start --log info --user root --pass root rocksdb:/mydata/mydatabase.db
+    user: root
+    ports: ["8000:8000"]
+    volumes: ["./surreal_data:/mydata"]
+    environment: ["SURREAL_EXPERIMENTAL_GRAPHQL=true"]
+    restart: always
+    mem_limit: 2g
+
+  infinity:
+    build: ./infinity-arm64   # arm64-native build (published michaelf34/infinity is amd64-only)
+    command: >
+      v2 --engine torch --batch-size 8
+      --model-id BAAI/bge-m3
+      --model-id BAAI/bge-reranker-v2-m3
+      --port 7997 --url-prefix /v1
+    ports: ["7997:7997"]
+    volumes: ["./infinity_cache:/root/.cache"]   # HF model cache (image runs as root)
+    environment: ["INFINITY_ANONYMOUS_USAGE_STATS=0"]   # disable telemetry
+    restart: always
+    mem_limit: 6g   # raised from 4g: two fp32 bge models + warmup batch OOM'd at 4g
+
+  open_notebook:
+    image: lfnovo/open_notebook:v1-latest
+    ports: ["8502:8502", "5055:5055"]     # UI + REST API
+    environment:
+      - OPEN_NOTEBOOK_ENCRYPTION_KEY=${OPEN_NOTEBOOK_ENCRYPTION_KEY}
+      - SURREAL_URL=ws://surrealdb:8000/rpc
+      - SURREAL_USER=root
+      - SURREAL_PASSWORD=root
+      - SURREAL_NAMESPACE=open_notebook
+      - SURREAL_DATABASE=open_notebook
+      - OPEN_NOTEBOOK_EMBEDDING_BATCH_SIZE=8
+      - RERANK_ENABLED=true          # Phase 3: route retrieval through Infinity bge-reranker
+      - RERANK_TOPN=5
+      - RERANK_FETCH=20
+    volumes:
+      - ./notebook_data:/app/data
+      - ./patches/notebook.py:/app/open_notebook/domain/notebook.py:ro   # reranker patch
+    depends_on: ["surrealdb", "infinity"]
+    extra_hosts: ["host.docker.internal:host-gateway"]   # pin to IPv4; v6 resolution is unroutable
+    restart: always
+    mem_limit: 2g
+
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    container_name: speaches
+    ports: ["8969:8000"]
+    volumes: ["hf-hub-cache:/home/ubuntu/.cache/huggingface/hub"]
+    restart: unless-stopped
+    mem_limit: 3g
+    cpus: 4
+
+volumes:
+  hf-hub-cache:

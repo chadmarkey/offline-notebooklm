@@ -1,0 +1,18 @@
+# Pinned to the working upstream michaelf34/infinity:latest-cpu version set (extracted via
+# `pip freeze`), so a fresh arm64 build can't drift onto a newer optimum/transformers that
+# infinity-emb 0.0.77 is incompatible with (latest optimum removed optimum.bettertransformer).
+torch==2.8.0
+numpy==1.26.4
+infinity-emb[all]==0.0.77
+optimum==1.24.0
+sentence-transformers==3.3.1
+huggingface-hub==0.34.4
+tokenizers==0.21.1
+onnxruntime==1.19.2
+# CLI stack — latest click broke typer ("Secondary flag is not valid for non-boolean flag")
+click==8.1.7
+typer==0.12.5
+rich==13.9.2
+shellingham==1.5.4
+orjson==3.10.7
+einops==0.8.0
